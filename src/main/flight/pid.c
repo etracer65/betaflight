@@ -43,6 +43,7 @@
 #include "fc/fc_rc.h"
 
 #include "fc/rc_controls.h"
+#include "fc/rc_modes.h"
 #include "fc/runtime_config.h"
 
 #include "flight/pid.h"
@@ -54,6 +55,7 @@
 #include "sensors/gyro.h"
 #include "sensors/acceleration.h"
 
+#define SIGN(x) ((x > 0.0f) - (x < 0.0f))
 
 FAST_RAM uint32_t targetPidLooptime;
 FAST_RAM pidAxisData_t pidData[XYZ_AXIS_COUNT];
@@ -138,6 +140,11 @@ void resetPidProfile(pidProfile_t *pidProfile)
         .throttle_boost = 0,
         .throttle_boost_cutoff = 15,
         .iterm_rotation = false,
+        .dynamic_iterm = false,
+        .dynamic_iterm_cutoff[FD_ROLL] = DYNAMIC_ITERM_AUTO,
+        .dynamic_iterm_cutoff[FD_PITCH] = DYNAMIC_ITERM_AUTO,
+        .dynamic_iterm_cutoff[FD_YAW] = DYNAMIC_ITERM_AUTO,
+        .dynamic_iterm_boost = DYNAMIC_ITERM_BOOST_DEFAULT,
     );
 }
 
@@ -308,6 +315,11 @@ FAST_RAM float throttleBoost;
 pt1Filter_t throttleLpf;
 static FAST_RAM bool itermRotation;
 
+#ifdef USE_DYNAMIC_ITERM
+static FAST_RAM float dynamicItermCutoff[3];
+static FAST_RAM float dynamicItermBoost;
+#endif // USE_DYNAMIC_ITERM
+
 void pidInitConfig(const pidProfile_t *pidProfile)
 {
     for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
@@ -343,6 +355,21 @@ void pidInitConfig(const pidProfile_t *pidProfile)
     itermLimit = pidProfile->itermLimit;
     throttleBoost = pidProfile->throttle_boost * 0.1f;
     itermRotation = pidProfile->iterm_rotation == 1;
+
+#ifdef USE_DYNAMIC_ITERM
+    for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
+        if (pidProfile->dynamic_iterm) {
+            if (pidProfile->dynamic_iterm_cutoff[axis] == DYNAMIC_ITERM_AUTO) {
+                dynamicItermCutoff[axis] = constrainf(getAxisMaxRate(axis) / 2.0f, DYNAMIC_ITERM_CUTOFF_MIN, DYNAMIC_ITERM_CUTOFF_MAX);
+            } else {
+                dynamicItermCutoff[axis] = pidProfile->dynamic_iterm_cutoff[axis];
+            }
+        } else {
+            dynamicItermCutoff[axis] = 0.0f;
+        }
+    }
+    dynamicItermBoost = pidProfile->dynamic_iterm_boost / 10.0f;
+#endif // USE_DYNAMIC_ITERM
 }
 
 void pidInit(const pidProfile_t *pidProfile)
@@ -534,6 +561,22 @@ static void handleItermRotation()
     }
 }
 
+static float calcDynamicIterm(int axis, float gyroRate)
+{
+    float ret = pidCoefficient[axis].Ki;
+#ifdef USE_DYNAMIC_ITERM
+    if (dynamicItermCutoff[axis] > 0.0f && IS_RC_MODE_ACTIVE(BOXDYNAMICITERM)) {
+        // Calculate the scaling factor from 0.0 to 1.0
+        const float dynamicItermFactor = (dynamicItermCutoff[axis] - constrainf(ABS(gyroRate), 0.0f, dynamicItermCutoff[axis])) / dynamicItermCutoff[axis];
+        ret = ret * dynamicItermBoost * dynamicItermFactor;
+        DEBUG_SET(DEBUG_DYNAMIC_ITERM, axis, lrintf(ret / ITERM_SCALE));
+    }
+#else
+    UNUSED(gyroRate);
+#endif // USE_DYNAMIC_ITERM
+    return ret;
+}
+
 // Betaflight pid controller, which will be maintained in the future with additional features specialised for current (mini) multirotor usage.
 // Based on 2DOF reference design (matlab)
 void pidController(const pidProfile_t *pidProfile, const rollAndPitchTrims_t *angleTrim, timeUs_t currentTimeUs)
@@ -605,8 +648,9 @@ void pidController(const pidProfile_t *pidProfile, const rollAndPitchTrims_t *an
         }
 
         // -----calculate I component
+
         const float ITerm = pidData[axis].I;
-        const float ITermNew = constrainf(ITerm + pidCoefficient[axis].Ki * errorRate * dynCi, -itermLimit, itermLimit);
+        const float ITermNew = constrainf(ITerm + calcDynamicIterm(axis, gyroRate) * errorRate * dynCi, -itermLimit, itermLimit);
         const bool outputSaturated = mixerIsOutputSaturated(axis, errorRate);
         if (outputSaturated == false || ABS(ITermNew) < ABS(ITerm)) {
             // Only increase ITerm if output is not saturated

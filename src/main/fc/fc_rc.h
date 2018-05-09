@@ -31,3 +31,4 @@ void updateRcCommands(void);
 void resetYawAxis(void);
 void initRcProcessing(void);
 bool isMotorsReversed(void);
+float getAxisMaxRate(int axis);

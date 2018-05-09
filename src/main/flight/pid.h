@@ -39,6 +39,15 @@
 #define ITERM_SCALE 0.244381f
 #define DTERM_SCALE 0.000529f
 
+// Dynamic iterm axis cutoff settings
+#define DYNAMIC_ITERM_AUTO -1    // Auto cutoff calculation
+#define DYNAMIC_ITERM_BOOST 2.0f // Boosts the Ki multiplier at low gyro angular rates
+#define DYNAMIC_ITERM_CUTOFF_MIN 200.0f // Min calculated cutoff for AUTO
+#define DYNAMIC_ITERM_CUTOFF_MAX 500.0f // Max calculated cutoff for AUTO
+#define DYNAMIC_ITERM_BOOST_MIN  10     // 1.0
+#define DYNAMIC_ITERM_BOOST_MAX  50     // 5.0
+#define DYNAMIC_ITERM_BOOST_DEFAULT 20  // Default boost factor (2.0)
+
 typedef enum {
     PID_ROLL,
     PID_PITCH,
@@ -115,6 +124,10 @@ typedef struct pidProfile_s {
     uint8_t throttle_boost;                 // how much should throttle be boosted during transient changes 0-100, 100 adds 10x hpf filtered throttle
     uint8_t throttle_boost_cutoff;          // Which cutoff frequency to use for throttle boost. higher cutoffs keep the boost on for shorter. Specified in hz.
     uint8_t  iterm_rotation;                    // rotates iterm to translate world errors to local coordinate system
+    uint8_t dynamic_iterm;                  // Dynamic item on/off
+    int16_t dynamic_iterm_cutoff[3];        // Dynamic iterm cutoff deg/sec for each axis
+    uint8_t dynamic_iterm_boost;            // Dynamic iterm boost factor
+
 } pidProfile_t;
 
 #ifndef USE_OSD_SLAVE

@@ -77,6 +77,7 @@ typedef enum {
     BOXUSER3,
     BOXUSER4,
     BOXPIDAUDIO,
+    BOXDYNAMICITERM,
     CHECKBOX_ITEM_COUNT
 } boxId_e;
 

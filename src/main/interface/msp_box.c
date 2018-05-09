@@ -93,6 +93,7 @@ static const box_t boxes[CHECKBOX_ITEM_COUNT] = {
     { BOXUSER4, "USER4", 43 },
     { BOXPIDAUDIO, "PID AUDIO", 44 },
     { BOXPARALYZE, "PARALYZE", 45 },
+    { BOXDYNAMICITERM, "DYNAMIC ITERM", 46},
 };
 
 // mask of enabled IDs, calculated on startup based on enabled features. boxId_e is used as bit index
@@ -297,6 +298,10 @@ void initActiveBoxIds(void)
 #if defined(USE_PID_AUDIO)
     BME(BOXPIDAUDIO);
 #endif
+
+#ifdef USE_DYNAMIC_ITERM
+    BME(BOXDYNAMICITERM);
+#endif // USE_DYNAMIC_ITERM
 
 #undef BME
     // check that all enabled IDs are in boxes array (check may be skipped when using findBoxById() functions)

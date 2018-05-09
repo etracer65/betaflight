@@ -748,6 +748,15 @@ const clivalue_t valueTable[] = {
     { "horizon_tilt_effect",        VAR_UINT8  | PROFILE_VALUE, .config.minmax = { 0,  250 }, PG_PID_PROFILE, offsetof(pidProfile_t, horizon_tilt_effect) },
     { "horizon_tilt_expert_mode",   VAR_UINT8  | PROFILE_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_PID_PROFILE, offsetof(pidProfile_t, horizon_tilt_expert_mode) },
 
+#ifdef USE_DYNAMIC_ITERM
+    { "dynamic_iterm",              VAR_UINT8   | PROFILE_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_PID_PROFILE, offsetof(pidProfile_t, dynamic_iterm) },
+    { "dynamic_iterm_cutoff_roll",  VAR_INT16   | PROFILE_VALUE, .config.minmax = { DYNAMIC_ITERM_AUTO, 2000 }, PG_PID_PROFILE, offsetof(pidProfile_t, dynamic_iterm_cutoff[FD_ROLL]) },
+    { "dynamic_iterm_cutoff_pitch", VAR_INT16   | PROFILE_VALUE, .config.minmax = { DYNAMIC_ITERM_AUTO, 2000 }, PG_PID_PROFILE, offsetof(pidProfile_t, dynamic_iterm_cutoff[FD_PITCH]) },
+    { "dynamic_iterm_cutoff_yaw",   VAR_INT16   | PROFILE_VALUE, .config.minmax = { DYNAMIC_ITERM_AUTO, 2000 }, PG_PID_PROFILE, offsetof(pidProfile_t, dynamic_iterm_cutoff[FD_YAW]) },
+    { "dynamic_iterm_boost",        VAR_UINT8   | PROFILE_VALUE, .config.minmax = { DYNAMIC_ITERM_BOOST_MIN, DYNAMIC_ITERM_BOOST_MAX }, PG_PID_PROFILE, offsetof(pidProfile_t, dynamic_iterm_boost) },
+#endif // USE_DYNAMIC_ITERM
+
+  
 // PG_TELEMETRY_CONFIG
 #ifdef USE_TELEMETRY
     { "tlm_inverted",               VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_TELEMETRY_CONFIG, offsetof(telemetryConfig_t, telemetry_inverted) },

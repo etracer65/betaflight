@@ -393,3 +393,9 @@ void initRcProcessing(void)
         break;
     }
 }
+
+float getAxisMaxRate(int axis)
+{
+    return applyRates(axis, 1.0, 1.0);
+}
+
