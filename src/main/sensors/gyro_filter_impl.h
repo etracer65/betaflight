@@ -8,7 +8,7 @@ static FAST_CODE void GYRO_FILTER_FUNCTION_NAME(gyroSensor_t *gyroSensor, timeDe
         GYRO_FILTER_DEBUG_SET(DEBUG_GYRO_SCALED, axis, lrintf(gyroADCf));
 
 #ifdef USE_GYRO_DATA_ANALYSE
-        if (isDynamicFilterActive()) {
+        if (isDynamicFilterActive) {
             if (axis == X) {
                 GYRO_FILTER_DEBUG_SET(DEBUG_FFT, 0, lrintf(gyroADCf)); // store raw data
                 GYRO_FILTER_DEBUG_SET(DEBUG_FFT_FREQ, 3, lrintf(gyroADCf)); // store raw data
@@ -23,7 +23,7 @@ static FAST_CODE void GYRO_FILTER_FUNCTION_NAME(gyroSensor_t *gyroSensor, timeDe
         gyroADCf = gyroSensor->lowpass2FilterApplyFn((filter_t *)&gyroSensor->lowpass2Filter[axis], gyroADCf);
 
 #ifdef USE_GYRO_DATA_ANALYSE
-        if (isDynamicFilterActive()) {
+        if (isDynamicFilterActive) {
             gyroDataAnalysePush(&gyroSensor->gyroAnalyseState, axis, gyroADCf);
             gyroADCf = gyroSensor->notchFilterDynApplyFn((filter_t *)&gyroSensor->notchFilterDyn[axis], gyroADCf);
             if (axis == X) {

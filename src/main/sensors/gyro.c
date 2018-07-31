@@ -100,6 +100,8 @@ static FAST_RAM_ZERO_INIT timeUs_t accumulationLastTimeSampledUs;
 
 static bool gyroHasOverflowProtection = true;
 
+static FAST_RAM_ZERO_INIT bool isDynamicFilterActive;
+
 typedef struct gyroCalibration_s {
     float sum[XYZ_AXIS_COUNT];
     stdev_t var[XYZ_AXIS_COUNT];
@@ -528,6 +530,7 @@ bool gyroInit(void)
 #endif
 
 #ifdef USE_GYRO_DATA_ANALYSE
+    isDynamicFilterActive = feature(FEATURE_DYNAMIC_FILTER);
     gyroDataAnalyseInit();
 #endif
 
@@ -741,16 +744,11 @@ static void gyroInitFilterNotch2(gyroSensor_t *gyroSensor, uint16_t notchHz, uin
 }
 
 #ifdef USE_GYRO_DATA_ANALYSE
-static bool isDynamicFilterActive(void)
-{
-    return feature(FEATURE_DYNAMIC_FILTER);
-}
-
 static void gyroInitFilterDynamicNotch(gyroSensor_t *gyroSensor)
 {
     gyroSensor->notchFilterDynApplyFn = nullFilterApply;
 
-    if (isDynamicFilterActive()) {
+    if (isDynamicFilterActive) {
         gyroSensor->notchFilterDynApplyFn = (filterApplyFnPtr)biquadFilterApplyDF1; // must be this function, not DF2
         const float notchQ = filterGetNotchQ(400, 390); //just any init value
         for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
@@ -1078,7 +1076,7 @@ static FAST_CODE FAST_CODE_NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSens
     }
 
 #ifdef USE_GYRO_DATA_ANALYSE
-    if (isDynamicFilterActive()) {
+    if (isDynamicFilterActive) {
         gyroDataAnalyse(&gyroSensor->gyroAnalyseState, gyroSensor->notchFilterDyn);
     }
 #endif
