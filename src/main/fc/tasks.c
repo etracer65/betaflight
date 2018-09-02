@@ -412,7 +412,7 @@ cfTask_t cfTasks[TASK_COUNT] = {
         .taskName = "PID",
         .subTaskName = "GYRO",
         .taskFunc = taskMainPidLoop,
-        .desiredPeriod = TASK_GYROPID_DESIRED_PERIOD,
+        .desiredPeriod = 0,
         .staticPriority = TASK_PRIORITY_REALTIME,
     },
 

@@ -34,6 +34,7 @@ typedef enum {
     TASK_PRIORITY_MEDIUM_HIGH = 4,
     TASK_PRIORITY_HIGH = 5,
     TASK_PRIORITY_REALTIME = 6,
+    TASK_PRIORITY_RUN_ALWAYS = 7,
     TASK_PRIORITY_MAX = 255
 } cfTaskPriority_e;
 

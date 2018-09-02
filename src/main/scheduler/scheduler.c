@@ -39,6 +39,10 @@
 
 #include "drivers/time.h"
 
+#include "fc/core.h"
+
+#include "sensors/gyro.h"
+
 // DEBUG_SCHEDULER, timings for:
 // 0 - gyroUpdate()
 // 1 - pidController()
@@ -241,20 +245,52 @@ void schedulerInit(void)
     queueAdd(&cfTasks[TASK_SYSTEM]);
 }
 
+FAST_CODE timeUs_t schedulerExecuteTask(cfTask_t *selectedTask, timeUs_t currentTimeUs)
+{
+    timeUs_t taskExecutionTime = 0;
+    
+    selectedTask->taskLatestDeltaTime = currentTimeUs - selectedTask->lastExecutedAt;
+    selectedTask->lastExecutedAt = currentTimeUs;
+    selectedTask->dynamicPriority = 0;
+
+    // Execute task
+#ifdef SKIP_TASK_STATISTICS
+    selectedTask->taskFunc(currentTimeUs);
+#else
+    if (calculateTaskStatistics) {
+        const timeUs_t currentTimeBeforeTaskCall = micros();
+        selectedTask->taskFunc(currentTimeBeforeTaskCall);
+        taskExecutionTime = micros() - currentTimeBeforeTaskCall;
+        selectedTask->movingSumExecutionTime += taskExecutionTime - selectedTask->movingSumExecutionTime / MOVING_SUM_COUNT;
+        selectedTask->totalExecutionTime += taskExecutionTime;   // time consumed by scheduler + task
+        selectedTask->maxExecutionTime = MAX(selectedTask->maxExecutionTime, taskExecutionTime);
+    } else {
+        selectedTask->taskFunc(currentTimeUs);
+    }
+#endif
+    return taskExecutionTime;
+}
+
 FAST_CODE void scheduler(void)
 {
     // Cache currentTime
     const timeUs_t currentTimeUs = micros();
-
+    timeUs_t taskExecutionTime = 0;
+    
+    if (gyroDataReady()) {
+        cfTask_t *gyroTask = &cfTasks[TASK_GYROPID];
+        taskExecutionTime += schedulerExecuteTask(gyroTask, currentTimeUs);
+    }
+    
     // Check for realtime tasks
     bool outsideRealtimeGuardInterval = true;
-    for (const cfTask_t *task = queueFirst(); task != NULL && task->staticPriority >= TASK_PRIORITY_REALTIME; task = queueNext()) {
-        const timeUs_t nextExecuteAt = task->lastExecutedAt + task->desiredPeriod;
-        if ((timeDelta_t)(currentTimeUs - nextExecuteAt) >= 0) {
-            outsideRealtimeGuardInterval = false;
-            break;
-        }
-    }
+//    for (const cfTask_t *task = queueFirst(); task != NULL && task->staticPriority >= TASK_PRIORITY_REALTIME; task = queueNext()) {
+//        const timeUs_t nextExecuteAt = task->lastExecutedAt + task->desiredPeriod;
+//        if ((timeDelta_t)(currentTimeUs - nextExecuteAt) >= 0) {
+//            outsideRealtimeGuardInterval = false;
+//            break;
+//        }
+//    }
 
     // The task to be invoked
     cfTask_t *selectedTask = NULL;
@@ -263,6 +299,7 @@ FAST_CODE void scheduler(void)
     // Update task dynamic priorities
     uint16_t waitingTasks = 0;
     for (cfTask_t *task = queueFirst(); task != NULL; task = queueNext()) {
+if (task->staticPriority < TASK_PRIORITY_REALTIME) {
         // Task has checkFunc - event driven
         if (task->checkFunc) {
 #if defined(SCHEDULER_DEBUG)
@@ -314,7 +351,9 @@ FAST_CODE void scheduler(void)
                 selectedTask = task;
             }
         }
+}
     }
+
 
     totalWaitingTasksSamples++;
     totalWaitingTasks += waitingTasks;
@@ -323,26 +362,8 @@ FAST_CODE void scheduler(void)
 
     if (selectedTask) {
         // Found a task that should be run
-        selectedTask->taskLatestDeltaTime = currentTimeUs - selectedTask->lastExecutedAt;
-        selectedTask->lastExecutedAt = currentTimeUs;
-        selectedTask->dynamicPriority = 0;
-
-        // Execute task
-#ifdef SKIP_TASK_STATISTICS
-        selectedTask->taskFunc(currentTimeUs);
-#else
-        if (calculateTaskStatistics) {
-            const timeUs_t currentTimeBeforeTaskCall = micros();
-            selectedTask->taskFunc(currentTimeBeforeTaskCall);
-            const timeUs_t taskExecutionTime = micros() - currentTimeBeforeTaskCall;
-            selectedTask->movingSumExecutionTime += taskExecutionTime - selectedTask->movingSumExecutionTime / MOVING_SUM_COUNT;
-            selectedTask->totalExecutionTime += taskExecutionTime;   // time consumed by scheduler + task
-            selectedTask->maxExecutionTime = MAX(selectedTask->maxExecutionTime, taskExecutionTime);
-        } else {
-            selectedTask->taskFunc(currentTimeUs);
-        }
-
-#endif
+        taskExecutionTime += schedulerExecuteTask(selectedTask, currentTimeUs);
+        
 #if defined(SCHEDULER_DEBUG)
         DEBUG_SET(DEBUG_SCHEDULER, 2, micros() - currentTimeUs - taskExecutionTime); // time spent in scheduler
     } else {

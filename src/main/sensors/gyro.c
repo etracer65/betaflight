@@ -1087,6 +1087,7 @@ static FAST_CODE FAST_CODE_NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSens
 
 FAST_CODE void gyroUpdate(timeUs_t currentTimeUs)
 {
+    
 #ifdef USE_DUAL_GYRO
     switch (gyroToUse) {
     case GYRO_CONFIG_USE_GYRO_1:
@@ -1147,6 +1148,30 @@ FAST_CODE void gyroUpdate(timeUs_t currentTimeUs)
     gyro.gyroADCf[Z] = gyroSensor1.gyroDev.gyroADCf[Z];
 #endif
 }
+
+FAST_CODE bool gyroDataReady()
+{
+#if (defined(USE_MPU_DATA_READY_SIGNAL) && defined(USE_EXTI))
+#ifdef USE_DUAL_GYRO
+    switch (gyroToUse) {
+    case GYRO_CONFIG_USE_GYRO_1:
+        return gyroSensor1.gyroDev.dataReady;
+        break;
+    case GYRO_CONFIG_USE_GYRO_2:
+        return gyroSensor2.gyroDev.dataReady;
+        break;
+    case GYRO_CONFIG_USE_GYRO_BOTH:
+        return (gyroSensor1.gyroDev.dataReady && gyroSensor2.gyroDev.dataReady);
+        break;
+    }
+#else
+    return gyroSensor1.gyroDev.dataReady;
+#endif //USE_DUAL_GYRO
+#else
+    return true;
+#endif
+}
+
 
 bool gyroGetAccumulationAverage(float *accumulationAverage)
 {
