@@ -2767,28 +2767,47 @@ static void cliGpsPassthrough(char *cmdline)
 #endif
 
 #if defined(USE_GYRO_REGISTER_DUMP) && !defined(SIMULATOR_BUILD)
-static void cliPrintGyroRegisters(uint8_t whichSensor)
+static void cliPrintGyroRegisters(uint8_t whichSensor, uint8_t registerId)
 {
     cliPrintLinef("# WHO_AM_I    0x%X", gyroReadRegister(whichSensor, MPU_RA_WHO_AM_I));
     cliPrintLinef("# CONFIG      0x%X", gyroReadRegister(whichSensor, MPU_RA_CONFIG));
     cliPrintLinef("# GYRO_CONFIG 0x%X", gyroReadRegister(whichSensor, MPU_RA_GYRO_CONFIG));
+    cliPrintLinef("# MPU_RA_INT_PIN_CFG 0x%X", gyroReadRegister(whichSensor, MPU_RA_INT_PIN_CFG));
+    cliPrintLinef("# MPU_RA_INT_ENABLE 0x%X", gyroReadRegister(whichSensor, MPU_RA_INT_ENABLE));
+    cliPrintLinef("# MPU_RA_INT_STATUS 0x%X", gyroReadRegister(whichSensor, MPU_RA_INT_STATUS));
+    cliPrintLinef("# MPU_RA_I2C_MST_STATUS 0x%X", gyroReadRegister(whichSensor, MPU_RA_I2C_MST_STATUS));
+    cliPrintLinef("# MPU_RA_SMPLRT_DIV 0x%X", gyroReadRegister(whichSensor, MPU_RA_SMPLRT_DIV));
+    cliPrintLinef("# MPU_RA_FIFO_EN 0x%X", gyroReadRegister(whichSensor, MPU_RA_FIFO_EN));
+
+    if (registerId < 255) {
+        cliPrintLinefeed();
+        cliPrintLinef("# Register %d: 0x%X", registerId, gyroReadRegister(whichSensor, registerId));
+    }
+
+
+    const float avgExtiDelayUs = mpuGetAverageExtiDelay();
+    cliPrintLinef("# average EXTI period %d.%03dus", (int)avgExtiDelayUs, lrintf(avgExtiDelayUs * 1000) % 1000);
+    cliPrintLinef("# EXTI period exceptions %d", mpuGetExtiExceptionCount());
 }
 
 static void cliDumpGyroRegisters(char *cmdline)
 {
+    uint8_t registerId = 255;
+    if (strlen(cmdline) > 0) {
+        registerId = atoi(cmdline);
+    }
 #ifdef USE_MULTI_GYRO
     if ((gyroConfig()->gyro_to_use == GYRO_CONFIG_USE_GYRO_1) || (gyroConfig()->gyro_to_use == GYRO_CONFIG_USE_GYRO_BOTH)) {
         cliPrintLinef("\r\n# Gyro 1");
-        cliPrintGyroRegisters(GYRO_CONFIG_USE_GYRO_1);
+        cliPrintGyroRegisters(GYRO_CONFIG_USE_GYRO_1, registerId);
     }
     if ((gyroConfig()->gyro_to_use == GYRO_CONFIG_USE_GYRO_2) || (gyroConfig()->gyro_to_use == GYRO_CONFIG_USE_GYRO_BOTH)) {
         cliPrintLinef("\r\n# Gyro 2");
-        cliPrintGyroRegisters(GYRO_CONFIG_USE_GYRO_2);
+        cliPrintGyroRegisters(GYRO_CONFIG_USE_GYRO_2, registerId);
     }
 #else
-    cliPrintGyroRegisters(GYRO_CONFIG_USE_GYRO_1);
+    cliPrintGyroRegisters(GYRO_CONFIG_USE_GYRO_1, registerId);
 #endif
-    UNUSED(cmdline);
 }
 #endif
 

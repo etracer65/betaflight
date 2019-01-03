@@ -231,3 +231,5 @@ uint8_t mpuGyroReadRegister(const busDevice_t *bus, uint8_t reg);
 
 struct accDev_s;
 bool mpuAccRead(struct accDev_s *acc);
+float mpuGetAverageExtiDelay(void);
+uint32_t mpuGetExtiExceptionCount(void);

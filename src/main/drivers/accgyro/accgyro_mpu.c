@@ -104,14 +104,25 @@ static void mpu6050FindRevision(gyroDev_t *gyro)
  * Gyro interrupt service routine
  */
 #ifdef USE_GYRO_EXTI
+static uint32_t intCount = 0;
+static uint32_t intTotalTime = 0;
+static uint32_t intExceptionCount = 0;
 static void mpuIntExtiHandler(extiCallbackRec_t *cb)
 {
-#ifdef DEBUG_MPU_DATA_READY_INTERRUPT
+//#ifdef DEBUG_MPU_DATA_READY_INTERRUPT
     static uint32_t lastCalledAtUs = 0;
     const uint32_t nowUs = micros();
+    if (lastCalledAtUs > 0) {
+        intCount++;
+        const uint32_t intDelay = (nowUs - lastCalledAtUs);
+        intTotalTime += intDelay;
+        if ((intDelay >= 130) || (intDelay <= 120)) {
+            intExceptionCount++;
+        }
+    }
     debug[0] = (uint16_t)(nowUs - lastCalledAtUs);
     lastCalledAtUs = nowUs;
-#endif
+//#endif
     gyroDev_t *gyro = container_of(cb, gyroDev_t, exti);
     gyro->dataReady = true;
 #ifdef DEBUG_MPU_DATA_READY_INTERRUPT
@@ -381,3 +392,17 @@ uint8_t mpuGyroReadRegister(const busDevice_t *bus, uint8_t reg)
 
 }
 #endif
+
+float mpuGetAverageExtiDelay(void)
+{
+    if (intCount > 0) {
+        return (float)intTotalTime / intCount;
+    } else {
+        return 0.0f;
+    }
+}
+
+uint32_t mpuGetExtiExceptionCount(void)
+{
+    return intExceptionCount;
+}
