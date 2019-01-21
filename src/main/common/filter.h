@@ -49,6 +49,12 @@ typedef struct laggedMovingAverage_s {
     bool primed;
 } laggedMovingAverage_t;
 
+typedef struct oneEuroFilter_s {
+    float alpha;
+    bool firstPass;
+    float state;
+} oneEuroFilter_t;
+
 typedef enum {
     FILTER_PT1 = 0,
     FILTER_BIQUAD,
@@ -83,3 +89,8 @@ float pt1FilterApply(pt1Filter_t *filter, float input);
 
 void slewFilterInit(slewFilter_t *filter, float slewLimit, float threshold);
 float slewFilterApply(slewFilter_t *filter, float input);
+
+float oneEuroFilterGain(uint16_t f_cut, float dT);
+void oneEuroFilterInit(oneEuroFilter_t *filter, float k);
+void oneEuroFilterUpdateCutoff(oneEuroFilter_t *filter, float k);
+float oneEuroFilterApply(oneEuroFilter_t *filter, float input);

@@ -225,3 +225,33 @@ FAST_CODE float laggedMovingAverageUpdate(laggedMovingAverage_t *filter, float i
     const uint16_t denom = filter->primed ? filter->windowSize : filter->movingWindowIndex;
     return filter->movingSum  / denom;
 }
+
+float oneEuroFilterGain(uint16_t f_cut, float dT)
+{
+    float tau = 1 / ( 2 * M_PI_FLOAT * f_cut);
+    return 1 / (1 + tau / dT);
+}
+
+void oneEuroFilterInit(oneEuroFilter_t *filter, float k)
+{
+    filter->state = 0.0f;
+    filter->alpha = k;
+    filter->firstPass = true;
+}
+
+void oneEuroFilterUpdateCutoff(oneEuroFilter_t *filter, float k)
+{
+    filter->alpha = k;
+}
+
+FAST_CODE float oneEuroFilterApply(oneEuroFilter_t *filter, float input)
+{
+    if (filter->firstPass) {
+        filter->state = input;
+        filter->firstPass = false;
+    } else {
+        filter->state = filter->alpha * input + (1 - filter->alpha) * filter->state;
+    }
+    return filter->state;
+}
+
