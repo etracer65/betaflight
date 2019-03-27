@@ -100,6 +100,11 @@ typedef enum {
     ITERM_RELAX_SETPOINT
 } itermRelaxType_e;
 
+typedef enum {
+    FEEDFORWARD_TYPE_CLASSIC,
+    FEEDFORWARD_TYPE_LINEAR
+} feedforwardType_e;
+
 typedef struct pidProfile_s {
     uint16_t yaw_lowpass_hz;                // Additional yaw filter when yaw axis too noisy
     uint16_t dterm_lowpass_hz;              // Delta Filter in hz
@@ -168,6 +173,9 @@ typedef struct pidProfile_s {
     uint8_t motor_output_limit;             // Upper limit of the motor output (percent)
     int8_t auto_profile_cell_count;         // Cell count for this profile to be used with if auto PID profile switching is used
     uint8_t transient_throttle_limit;       // Maximum DC component of throttle change to mix into throttle to prevent airmode mirroring noise
+    uint8_t feedforward_return_factor;      // The percentage of feedforward used when stick is returning to center
+    uint8_t feedforward_type;               // The feedforward calculation type. CLASSIC = based on setpoint, LINEAR = based on stick deflection
+    uint16_t feedforward_linear_scale;      // Used to scale the linear input delta into the expected range for feedforward effect
 } pidProfile_t;
 
 PG_DECLARE_ARRAY(pidProfile_t, PID_PROFILE_COUNT, pidProfiles);
