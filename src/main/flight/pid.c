@@ -1248,6 +1248,8 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
     static FAST_RAM_ZERO_INIT uint32_t lastFrameNumber;
 #endif
 
+    static float lastCalculatedFeedforward[XYZ_AXIS_COUNT];
+
 #if defined(USE_ACC)
     static timeUs_t levelModeStartTimeUs = 0;
     static bool gpsRescuePreviousState = false;
@@ -1482,16 +1484,21 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
         // Only enable feedforward for rate mode and if launch control is inactive
         const float feedforwardGain = (flightModeFlags || launchControlActive) ? 0.0f : pidCoefficient[axis].Kf;
         if (feedforwardGain > 0) {
-            // no transition if feedForwardTransition == 0
-            float transition = feedForwardTransition > 0 ? MIN(1.f, getRcDeflectionAbs(axis) * feedForwardTransition) : 1;
-            float feedForward = feedforwardGain * transition * pidSetpointDelta * pidFrequency;
+            float feedForward;
+            if (rcIsDuplicateFrame()) {
+                feedForward = lastCalculatedFeedforward[axis];
+            } else {
+                // no transition if feedForwardTransition == 0
+                float transition = feedForwardTransition > 0 ? MIN(1.f, getRcDeflectionAbs(axis) * feedForwardTransition) : 1;
+                feedForward = feedforwardGain * transition * pidSetpointDelta * pidFrequency;
 
 #ifdef USE_INTERPOLATED_SP
-            pidData[axis].F = shouldApplyFfLimits(axis) ?
-                applyFfLimit(axis, feedForward, pidCoefficient[axis].Kp, currentPidSetpoint) : feedForward;
-#else
-            pidData[axis].F = feedForward;
+                feedForward = shouldApplyFfLimits(axis) ?
+                    applyFfLimit(axis, feedForward, pidCoefficient[axis].Kp, currentPidSetpoint) : feedForward;
 #endif
+                lastCalculatedFeedforward[axis] = feedForward;
+                pidData[axis].F = feedForward;
+            }
         } else {
             pidData[axis].F = 0;
         }

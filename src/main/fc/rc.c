@@ -602,6 +602,7 @@ FAST_CODE uint8_t processRcSmoothingFilter(void)
 FAST_CODE void processRcCommand(void)
 {
     uint8_t updatedChannel;
+    static unsigned duplicateFrameCount;
 
     if (isRXDataNew) {
         rcFrameNumber++;
@@ -615,14 +616,23 @@ FAST_CODE void processRcCommand(void)
     if (isRXDataNew) {
         isDuplicateFrame = true;
         for (int i = FD_ROLL; i <= FD_YAW; i++) {
-            if (rcCommand[i] != oldRcCommand[i]) {
-                isDuplicateFrame = false;
-            }
-            oldRcCommand[i] = rcCommand[i];
             const float rcCommandf = rcCommand[i] / 500.0f;
             const float rcCommandfAbs = fabsf(rcCommandf);
             rawSetpoint[i] = applyRates(i, rcCommandf, rcCommandfAbs);
             rawDeflection[i] = rcCommandf;
+
+            if ((rcCommand[i] != oldRcCommand[i]) || (rcCommandfAbs > 0.95f)) {
+                isDuplicateFrame = false;
+            }
+            oldRcCommand[i] = rcCommand[i];
+        }
+        if (isDuplicateFrame) {
+            duplicateFrameCount++;
+            if (duplicateFrameCount > 3) {
+                isDuplicateFrame = false;
+            }
+        } else {
+            duplicateFrameCount = 0;
         }
     }
 #endif
