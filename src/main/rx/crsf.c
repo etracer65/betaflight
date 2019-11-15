@@ -255,6 +255,7 @@ STATIC_UNIT_TESTED void crsfDataReceive(uint16_t c, void *data)
         if (crsfFrameDone) {
             crsfFramePosition = 0;
             if (crsfFrame.frame.type != CRSF_FRAMETYPE_RC_CHANNELS_PACKED) {
+                crsfFrameDone = false;
                 const uint8_t crc = crsfFrameCRC();
                 if (crc == crsfFrame.bytes[fullFrameLength - 1]) {
                     switch (crsfFrame.frame.type)
