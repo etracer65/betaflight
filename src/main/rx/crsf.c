@@ -311,7 +311,8 @@ STATIC_UNIT_TESTED uint8_t crsfFrameStatus(rxRuntimeState_t *rxRuntimeState)
 #endif
     if (crsfFrameDone) {
         crsfFrameDone = false;
-        if (crsfFrame.frame.type == CRSF_FRAMETYPE_RC_CHANNELS_PACKED) {
+        if ((crsfFrame.frame.type == CRSF_FRAMETYPE_RC_CHANNELS_PACKED) &&
+            (crsfFrame.frame.deviceAddress == CRSF_ADDRESS_FLIGHT_CONTROLLER)) {
             // CRC includes type and payload of each frame
             const uint8_t crc = crsfFrameCRC();
             if (crc != crsfFrame.frame.payload[CRSF_FRAME_RC_CHANNELS_PAYLOAD_SIZE]) {
