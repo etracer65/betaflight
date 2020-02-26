@@ -303,6 +303,29 @@ static void swdPinsInit(void)
     if (IOGetOwner(io) == OWNER_FREE) {
         IOInit(io, OWNER_SWD, 0);
     }
+
+void flashLeds(void)
+{
+    LED0_OFF;
+    LED1_OFF;
+    LED2_OFF;
+    delay(100);
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 3; j++) {
+            LED0_ON;
+//            LED1_ON;
+//            LED2_ON;
+            delay(50);
+            LED0_OFF;
+//            LED1_OFF;
+//            LED2_OFF;
+            delay(50);
+        }
+        delay(500);
+    }
+
+    systemResetToBootloader(BOOTLOADER_REQUEST_ROM);
+    while (1);
 }
 
 void init(void)

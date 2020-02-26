@@ -33,3 +33,4 @@ extern uint8_t systemState;
 
 void init(void);
 void processLoopback(void);
+void flashLeds(void);
