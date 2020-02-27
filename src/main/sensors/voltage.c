@@ -164,7 +164,7 @@ void voltageMeterADCRefresh(void)
         uint8_t channel = voltageMeterAdcChannelMap[i];
         uint16_t rawSample = adcGetChannel(channel);
 
-        uint16_t filteredSample = pt1FilterApply(&state->filter, rawSample);
+        uint16_t filteredSample = pt1FilterApplySeed(&state->filter, rawSample);
 
         // always calculate the latest voltage, see getLatestVoltage() which does the calculation on demand.
         state->voltageFiltered = voltageAdcToVoltage(filteredSample, config);
@@ -228,7 +228,7 @@ void voltageMeterESCRefresh(void)
     escSensorData_t *escData = getEscSensorData(ESC_SENSOR_COMBINED);
     if (escData) {
         voltageMeterESCState.voltageUnfiltered = escData->dataAge <= ESC_BATTERY_AGE_MAX ? escData->voltage : 0;
-        voltageMeterESCState.voltageFiltered = pt1FilterApply(&voltageMeterESCState.filter, voltageMeterESCState.voltageUnfiltered);
+        voltageMeterESCState.voltageFiltered = pt1FilterApplySeed(&voltageMeterESCState.filter, voltageMeterESCState.voltageUnfiltered);
     }
 #endif
 }

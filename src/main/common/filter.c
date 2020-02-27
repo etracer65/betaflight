@@ -54,6 +54,7 @@ void pt1FilterInit(pt1Filter_t *filter, float k)
 {
     filter->state = 0.0f;
     filter->k = k;
+    filter->seeded = false;
 }
 
 void pt1FilterUpdateCutoff(pt1Filter_t *filter, float k)
@@ -64,6 +65,21 @@ void pt1FilterUpdateCutoff(pt1Filter_t *filter, float k)
 FAST_CODE float pt1FilterApply(pt1Filter_t *filter, float input)
 {
     filter->state = filter->state + filter->k * (input - filter->state);
+    return filter->state;
+}
+
+// Optionally apply or seed the filter state depending on whether the state is uninitialized.
+// If state is 0 then set the state to the input to "seed" the filter state. Useful for slow timebase
+// filters where we don't want to wait for the initial calculations to converge (like voltage meters).
+// *WARNING* - Don't mix pt1FilterApply() and pt1FilterApplySeed() calls for the same filter object.
+FAST_CODE float pt1FilterApplySeed(pt1Filter_t *filter, float input)
+{
+    if (filter->seeded) {
+        pt1FilterApply(filter, input);
+    } else {
+        filter->state = input;
+        filter->seeded = true;
+    }
     return filter->state;
 }
 
