@@ -80,6 +80,37 @@
 #define TARGET_IO_PORTD 0xffff
 #define TARGET_IO_PORTE 0xffff
 
+#elif defined(STM32F446)
+#define TARGET_BOARD_IDENTIFIER "S446"
+
+#define USBD_PRODUCT_STRING     "Betaflight STM32F446"
+
+#define USE_I2C_DEVICE_1
+#define USE_I2C_DEVICE_2
+#define USE_I2C_DEVICE_3
+
+#define USE_UART1
+#define USE_UART2
+#define USE_UART3
+#define USE_UART4
+#define USE_UART5
+#define USE_UART6
+
+#define SERIAL_PORT_COUNT       (UNIFIED_SERIAL_PORT_COUNT + 6)
+
+#define USE_INVERTER
+
+#define USE_SPI_DEVICE_1
+#define USE_SPI_DEVICE_2
+#define USE_SPI_DEVICE_3
+
+#define TARGET_IO_PORTA 0xffff
+#define TARGET_IO_PORTB 0xffff
+#define TARGET_IO_PORTC 0xffff
+#define TARGET_IO_PORTD 0xffff
+#define TARGET_IO_PORTE 0xffff
+#define TARGET_IO_PORTF 0xffff
+
 #elif defined(STM32F7X2)
 #define TARGET_BOARD_IDENTIFIER "S7X2"
 
@@ -167,8 +198,10 @@
 #define USE_GYRO_SPI_MPU6000
 #define USE_ACC_SPI_MPU6500
 #define USE_GYRO_SPI_MPU6500
-#define USE_ACC_SPI_ICM20689
-#define USE_GYRO_SPI_ICM20689
+//#define USE_ACC_SPI_ICM20689
+//#define USE_GYRO_SPI_ICM20689
+#define BMI160_SPI_DIVISOR 16
+#define USE_ACCGYRO_BMI160
 
 #define USE_MAG
 #define USE_MAG_DATA_READY_SIGNAL

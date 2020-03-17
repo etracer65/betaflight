@@ -10,12 +10,17 @@ ifeq ($(TARGET), STM32F411)
 F411_TARGETS += $(TARGET)
 
 else
+ifeq ($(TARGET), STM32F446)
+F446_TARGETS += $(TARGET)
+
+else
 ifeq ($(TARGET), STM32F7X2)
 F7X2RE_TARGETS += $(TARGET)
 
 else # STM32F745
 F7X5XG_TARGETS += $(TARGET)
 
+endif
 endif
 endif
 endif
