@@ -54,6 +54,6 @@ STATIC_ASSERT(FFT_WINDOW_SIZE <= (uint8_t) -1, window_size_greater_than_underlyi
 
 void gyroDataAnalyseStateInit(gyroAnalyseState_t *state, uint32_t targetLooptimeUs);
 void gyroDataAnalysePush(gyroAnalyseState_t *state, const int axis, const float sample);
-void gyroDataAnalyse(gyroAnalyseState_t *state, biquadFilter_t *notchFilterDyn, biquadFilter_t *notchFilterDyn2);
+void gyroDataAnalyse(gyroAnalyseState_t *state, biquadFilter_t *notchFilterDyn, biquadFilter_t *notchFilterDynLow, biquadFilter_t *notchFilterDynHigh);
 uint16_t getMaxFFT(void);
 void resetMaxFFT(void);

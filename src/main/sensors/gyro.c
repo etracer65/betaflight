@@ -480,7 +480,7 @@ FAST_CODE void gyroFiltering(timeUs_t currentTimeUs)
 
 #ifdef USE_GYRO_DATA_ANALYSE
     if (isDynamicFilterActive()) {
-        gyroDataAnalyse(&gyro.gyroAnalyseState, gyro.notchFilterDyn, gyro.notchFilterDyn2);
+        gyroDataAnalyse(&gyro.gyroAnalyseState, gyro.notchFilterDyn, gyro.notchFilterDynLow, gyro.notchFilterDynHigh);
     }
 #endif
 

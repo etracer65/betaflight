@@ -83,7 +83,8 @@ static FAST_CODE void GYRO_FILTER_FUNCTION_NAME(void)
             }
             gyroDataAnalysePush(&gyro.gyroAnalyseState, axis, gyroADCf);
             gyroADCf = gyro.notchFilterDynApplyFn((filter_t *)&gyro.notchFilterDyn[axis], gyroADCf);
-            gyroADCf = gyro.notchFilterDynApplyFn2((filter_t *)&gyro.notchFilterDyn2[axis], gyroADCf);
+            gyroADCf = gyro.notchFilterDynLowApplyFn((filter_t *)&gyro.notchFilterDynLow[axis], gyroADCf);
+            gyroADCf = gyro.notchFilterDynHighApplyFn((filter_t *)&gyro.notchFilterDynHigh[axis], gyroADCf);
         }
 #endif
 

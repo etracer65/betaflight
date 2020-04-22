@@ -103,9 +103,11 @@ typedef struct gyro_s {
     biquadFilter_t notchFilter2[XYZ_AXIS_COUNT];
 
     filterApplyFnPtr notchFilterDynApplyFn;
-    filterApplyFnPtr notchFilterDynApplyFn2;
+    filterApplyFnPtr notchFilterDynLowApplyFn;
+    filterApplyFnPtr notchFilterDynHighApplyFn;
     biquadFilter_t notchFilterDyn[XYZ_AXIS_COUNT];
-    biquadFilter_t notchFilterDyn2[XYZ_AXIS_COUNT];
+    biquadFilter_t notchFilterDynLow[XYZ_AXIS_COUNT];
+    biquadFilter_t notchFilterDynHigh[XYZ_AXIS_COUNT];
 
 #ifdef USE_GYRO_DATA_ANALYSE
     gyroAnalyseState_t gyroAnalyseState;
